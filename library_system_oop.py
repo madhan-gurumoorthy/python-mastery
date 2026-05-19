@@ -1,10 +1,36 @@
+from abc import ABC, abstractmethod
+
+# ==========================================
+# 1. ABSTRACTION (Abstract Base Class)
+# ==========================================
+class User(ABC):
+    """
+    Abstract Base Class representing a template for all users.
+    This class cannot be instantiated directly.
+    """
+    def __init__(self, user_id: str, name: str):
+        self.user_id = user_id
+        self.name = name
+
+    @abstractmethod
+    def get_role(self) -> str:
+        """
+        Abstract Method: Every subclass MUST implement this method
+        to define its unique role permissions.
+        """
+        pass
+
+
+# ==========================================
+# 2. ENCAPSULATION (Data Protection)
+# ==========================================
 class Book:
-    """Represents a book in the library."""
+    """Represents a book in the library, encapsulating its borrow state."""
     def __init__(self, isbn: str, title: str, author: str):
         self.isbn = isbn
         self.title = title
         self.author = author
-        self._is_borrowed = False  # Encapsulation: Protected attribute
+        self._is_borrowed = False  # Protected attribute (Encapsulation)
 
     def is_available(self) -> bool:
         return not self._is_borrowed
@@ -23,23 +49,16 @@ class Book:
         return f"'{self.title}' by {self.author} [ISBN: {self.isbn}] - {status}"
 
 
-class User:
-    """Base class representing a general user (Inheritance)."""
-    def __init__(self, user_id: str, name: str):
-        self.user_id = user_id
-        self.name = name
-
-    def get_role(self) -> str:
-        return "General User"
-
-
-class Member(User):
-    """Derived class representing a library member who can borrow books."""
+# ==========================================
+# 3. INHERITANCE & POLYMORPHISM
+# ==========================================
+class Member(User):  # Inheritance
+    """A library member who can check out and return books."""
     def __init__(self, user_id: str, name: str):
         super().__init__(user_id, name)
-        self.borrowed_books = []  # Composition: Stores Book objects
+        self.borrowed_books = []  # Composition: Holds Book objects
 
-    def get_role(self) -> str:  # Polymorphism: Overriding base method
+    def get_role(self) -> str:  # Polymorphism: Overriding abstract method
         return "Member"
 
     def borrow_book(self, book: Book) -> bool:
@@ -56,53 +75,55 @@ class Member(User):
         return False
 
 
-class Librarian(User):
-    """Derived class representing a staff member who manages the library."""
+class Librarian(User):  # Inheritance
+    """A staff member authorized to manage library inventory."""
     def __init__(self, user_id: str, name: str, employee_id: str):
         super().__init__(user_id, name)
         self.employee_id = employee_id
 
-    def get_role(self) -> str:  # Polymorphism
+    def get_role(self) -> str:  # Polymorphism: Overriding abstract method
         return "Librarian"
 
 
+# ==========================================
+# 4. ORCHESTRATION (The Library Facade)
+# ==========================================
 class Library:
-    """The central management system (The 'Facade' object)."""
+    """Central orchestration object to manage books and users."""
     def __init__(self, name: str):
         self.name = name
-        self.books = {}    # Stores ISBN -> Book object
-        self.users = {}    # Stores User_ID -> User object
+        self.books = {}    # ISBN -> Book mapping
+        self.users = {}    # User_ID -> User mapping
 
-    # --- Librarian Actions ---
     def add_book(self, librarian: Librarian, book: Book):
-        """Only librarians are allowed to add books."""
+        """Strictly enforces that only Librarians can add inventory."""
         if isinstance(librarian, Librarian):
             self.books[book.isbn] = book
             print(f"[Success] Librarian {librarian.name} added: {book.title}")
         else:
-            print("[Access Denied] Only librarians can add books.")
+            print("[Access Denied] Only authorized librarians can add inventory.")
 
     def register_user(self, user: User):
+        """Accepts any valid subclass of User."""
         self.users[user.user_id] = user
         print(f"[Success] Registered {user.get_role()}: {user.name}")
 
-    # --- Member Actions ---
     def checkout_book(self, member_id: str, isbn: str):
         member = self.users.get(member_id)
         book = self.books.get(isbn)
 
         if not isinstance(member, Member):
-            print("[Error] Invalid member ID or user is not a regular Member.")
+            print("[Error] Access Denied: User is not an active library Member.")
             return
 
         if not book:
-            print("[Error] Book not found in library inventory.")
+            print("[Error] Inventory Error: Book not found.")
             return
 
         if member.borrow_book(book):
-            print(f"[Success] {member.name} successfully checked out '{book.title}'.")
+            print(f"[Success] {member.name} checked out '{book.title}'.")
         else:
-            print(f"[Failure] '{book.title}' is already checked out.")
+            print(f"[Failure] '{book.title}' is currently unavailable.")
 
     def return_book(self, member_id: str, isbn: str):
         member = self.users.get(member_id)
@@ -110,29 +131,16 @@ class Library:
 
         if isinstance(member, Member) and book:
             if member.return_book(book):
-                print(f"[Success] {member.name} returned '{book.title}'.")
+                print(f"[Success] {member.name} successfully returned '{book.title}'.")
             else:
-                print(f"[Error] {member.name} does not have this book checked out.")
+                print(f"[Error] {member.name} does not hold a reservation for this book.")
         else:
-            print("[Error] Invalid member or book details.")
+            print("[Error] Action failed. Verify member ID and book ISBN.")
 
-    # --- System Status ---
     def display_inventory(self):
         print(f"\n--- {self.name} Current Inventory ---")
         if not self.books:
-            print("The library is currently empty.")
+            print("No catalog items found.")
         for book in self.books.values():
             print(f" - {book}")
-        print("-" * 35)
-
-
-
-
-"""
-OOP Principles Applied:
-Encapsulation: The Book class protects its state (_is_borrowed). Outside objects cannot change it directly; they must use the borrow() or return_book() methods, enforcing safety rules.
-
-Inheritance: Member and Librarian inherit common traits like user_id and name from the User superclass, eliminating redundant code.
-
-Polymorphism: The get_role() method is implemented in the parent class but overridden differently by both child classes. The library system handles them dynamically based on their specific behavior type. 
-"""
+        print("-" * 40)
