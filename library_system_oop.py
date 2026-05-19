@@ -124,3 +124,15 @@ class Library:
         for book in self.books.values():
             print(f" - {book}")
         print("-" * 35)
+
+
+
+
+"""
+OOP Principles Applied:
+Encapsulation: The Book class protects its state (_is_borrowed). Outside objects cannot change it directly; they must use the borrow() or return_book() methods, enforcing safety rules.
+
+Inheritance: Member and Librarian inherit common traits like user_id and name from the User superclass, eliminating redundant code.
+
+Polymorphism: The get_role() method is implemented in the parent class but overridden differently by both child classes. The library system handles them dynamically based on their specific behavior type. 
+"""

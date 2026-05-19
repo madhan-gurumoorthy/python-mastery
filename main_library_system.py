@@ -12,7 +12,7 @@ city_library.register_user(bob_member)
 
 # 3. Create Books
 book1 = Book("978-0141439518", "Pride and Prejudice", "Jane Austen")
-book2 = Book("978-0451524935", "184", "George Orwell")
+book2 = Book("978-0451524935", "1984", "George Orwell")
 
 print("\n--- Testing Security Restrictions ---")
 # Bob (a Member) tries to add a book to the library system
